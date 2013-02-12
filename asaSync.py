@@ -35,7 +35,7 @@ class Acl:
             return False
         
         # Default Condition        
-        return False
+        return True
     
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -45,6 +45,10 @@ class Acl:
         
         if self.aclType == "extended":
             result += "extended " + self.action + " " + self.extended
+            
+            #Temp to show remark
+            if self.remark != "":
+                result += " Remark: " + self.remark
         elif self.aclType == "remark":
             result += "remark " + self.remark
         else:
@@ -291,20 +295,23 @@ def compareConfigs(config1, config2):
             #Both configs have this acl, compare them
             if acl != acl2:
                 aclsToSync.append(acl)
+                print acl
+                print acl2
         else:
             #The second config does not conaint this acl
-            aclsToSync.append(acl) 
-    
-    
-    #Temp - Show Differences
-    for netObject in netObjectsToSync:
-        print netObject
-    
-    for objectGroup in objectGroupsToSync:
-        print objectGroup
-    
-    for acl in aclsToSync:
-        print acl
+            aclsToSync.append(acl)
+
+#Temp - Show Differences
+#print "~Diffs"
+
+#for netObject in netObjectsToSync:
+#print netObject
+
+#for objectGroup in objectGroupsToSync:
+#print objectGroup
+
+#for acl in aclsToSync:
+#print acl
 
 def connectSSH (host):
     
@@ -333,24 +340,34 @@ def connectSSH (host):
     return config
 
 def parseAccessLists (config):
-    acls  = []
-    eList = config.split()
-    index = 0
+    acls   = []
+    eList  = config.split()
+    index  = 0
+    remark = False
     
     while index < len(eList):
         try:
-            newAcl = Acl()
-            newAcl.remark = ""
-            newAcl.action = ""
+            if remark == False:
+                newAcl = Acl()
+                newAcl.remark = ""
+                newAcl.action = ""
             
             index   = eList.index("access-list", index)
             index  += 1
+            
+            # ACL Remark Match Check
+            if remark == True and newAcl.aclName != eList[index]:
+                print "~Error: Remark for ACL with different name."
+            
             newAcl.aclName = eList[index]
             index  += 1
             newAcl.aclType = eList[index]
             
             if newAcl.aclType == "ethertype":
                 print "~Ethertype"
+                
+                # Reset remark flag, so acls are not added to previous an ACL
+                remark = False
             elif newAcl.aclType == "extended":
                 index  += 1
                 
@@ -361,7 +378,12 @@ def parseAccessLists (config):
                 
                 newAcl.action   = eList[index]
                 newAcl.extended = " ".join(eList[index:endIndex])
+                
+                # Reset remark flag, so acls are not added to previous an ACL
+                remark = False                
             elif newAcl.aclType == "remark":
+                # Remarks are comments for the next line of ACL
+                
                 try:
                     endIndex    = eList.index("access-list", index)
                 except ValueError:
@@ -369,7 +391,10 @@ def parseAccessLists (config):
                 
                 index          += 1
                 newAcl.remark   = " ".join(eList[index:endIndex])
-                newAcl.extended = " "
+                newAcl.extended = ""
+                
+                #Set the remark flag to True so that the next acl gets added to the remark
+                remark = True
             else:
                 print "~Unknown ACL Type"
             
