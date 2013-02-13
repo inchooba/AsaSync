@@ -8,11 +8,12 @@ device1  = ""
 device2  = ""
 
 class Acl:
-    aclName  = ""
-    action   = ""
-    remark   = ""
-    extended = ""
-    aclType  = ""
+    aclName    = ""
+    aclType    = ""
+    action     = ""
+    extended   = ""
+    lineNumber = 0
+    remark     = ""
     
     def __eq__(self, other):
         try:
@@ -340,10 +341,11 @@ def connectSSH (host):
     return config
 
 def parseAccessLists (config):
-    acls   = []
-    eList  = config.split()
-    index  = 0
-    remark = False
+    acls       = []
+    eList      = config.split()
+    index      = 0
+    lineNumber = 0
+    remark     = False
     
     while index < len(eList):
         try:
@@ -398,8 +400,9 @@ def parseAccessLists (config):
             else:
                 print "~Unknown ACL Type"
             
+            newAcl.lineNumber = lineNumber
             acls.append(newAcl)
-        
+            lineNumber += 1
         except ValueError:
             print "~End of ACL List"
             break
