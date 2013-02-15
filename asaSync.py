@@ -80,11 +80,11 @@ class Config:
         
         return False    
     
-    # Checks to see if this config contains an Acl with the same name as the passed object
-    # If yes, then the matching acl is returned, if no, False is returned
+    # Checks to see if this config contains an Acl with the same name and line number as the
+    # passed object.  If yes, then the matching acl is returned, if no, False is returned
     def containsAcl(self, acl): 
         for accessList in self.acls:
-            if accessList.aclName == acl.aclName:
+            if accessList.aclName == acl.aclName and accessList.lineNumber == acl.lineNumber:
                 return accessList
         
         return False    
@@ -296,11 +296,11 @@ def compareConfigs(config1, config2):
             #Both configs have this acl, compare them
             if acl != acl2:
                 aclsToSync.append(acl)
-                print acl
-                print acl2
+        
         else:
             #The second config does not conaint this acl
             aclsToSync.append(acl)
+
 
 #Temp - Show Differences
 #print "~Diffs"
@@ -401,7 +401,10 @@ def parseAccessLists (config):
                 print "~Unknown ACL Type"
             
             newAcl.lineNumber = lineNumber
-            acls.append(newAcl)
+            
+            if remark == False:
+                acls.append(newAcl)
+            
             lineNumber += 1
         except ValueError:
             print "~End of ACL List"
@@ -598,5 +601,6 @@ config1 = parseConfig(config1Text)
 config2 = parseConfig(config2Text)
 
 compareConfigs(config1, config2)
+
 
 
