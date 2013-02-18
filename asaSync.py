@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import difflib
 import pexpect
 import re
@@ -44,7 +46,9 @@ class Acl:
     def __str__(self):
         result = "access-list " + self.aclName + " "
         
-        if self.aclType == "extended":
+        if self.aclType == "ethertype":
+            result += "ethertype " + self.action + " " + self.extended
+        elif self.aclType == "extended":
             result += "extended " + self.action + " " + self.extended
             
             #Temp to show remark
@@ -366,10 +370,19 @@ def parseAccessLists (config):
             newAcl.aclType = eList[index]
             
             if newAcl.aclType == "ethertype":
-                print "~Ethertype"
+                index  += 1
+                newAcl.action   = eList[index]
+                index  += 1
+                
+                try:
+                    endIndex    = eList.index("access-list", index)
+                except ValueError:
+                    endIndex    = len(eList)
+                
+                newAcl.extended = " ".join(eList[index:endIndex])
                 
                 # Reset remark flag, so acls are not added to previous an ACL
-                remark = False
+                remark = False               
             elif newAcl.aclType == "extended":
                 index  += 1
                 
@@ -407,9 +420,8 @@ def parseAccessLists (config):
             
             lineNumber += 1
         except ValueError:
-            print "~End of ACL List"
+            # End of ACL List
             break
-    
     
     return acls
 
@@ -601,6 +613,5 @@ config1 = parseConfig(config1Text)
 config2 = parseConfig(config2Text)
 
 compareConfigs(config1, config2)
-
 
 
