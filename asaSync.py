@@ -62,9 +62,11 @@ class Acl:
         return result
 
 class Config:
-    acls         = []
-    netObjects   = []
-    objectGroups = []    
+    
+    def __init__(self):
+        acls         = []
+        netObjects   = []
+        objectGroups = []    
     
     # Checks to see if this config contains a NetworkObject with the same name as the passed object
     # If yes, then the matching object is returned, if no; False is returned. 
@@ -168,18 +170,21 @@ class NetworkObject:
             
             #Check Hosts
             for index in range(len(self.hosts)):
-                if self.hosts[index] != other.hosts[index]:
-                    return False
+                if index < len(other.hosts):
+                    if self.hosts[index] != other.hosts[index]:
+                        return False
             
             #Check Subnets
             for index in range(len(self.subnets)):
-                if self.subnets[index] != other.subnets[index]:
-                    return False
+                if index < len(other.subnets):
+                    if self.subnets[index] != other.subnets[index]:
+                        return False
             
             #Check Ranges
             for index in range(len(self.ranges)):
-                if self.ranges[index] != other.ranges[index]:
-                    return False
+                if index < len(other.ranges):
+                    if self.ranges[index] != other.ranges[index]:
+                        return False
         
         except (AttributeError, TypeError, ValueError):
             return False
@@ -271,7 +276,7 @@ def compareConfigs(config1, config2):
     for netObject in config1.netObjects:
         netObject2 = config2.containsNetObject(netObject)
         
-        if netObject != False:
+        if netObject2 != False:
             #Both configs have this NetObject, compare them
             if netObject != netObject2:
                 netObjectsToSync.append(netObject)
@@ -283,7 +288,7 @@ def compareConfigs(config1, config2):
     for objectGroup in config1.objectGroups:
         objectGroup2 = config2.containsObjectGroup(objectGroup)
         
-        if netObject != False:
+        if objectGroup2 != False:
             #Both configs have this Object Group, compare them
             if objectGroup != objectGroup2:
                 objectGroupsToSync.append(objectGroup)
@@ -296,32 +301,32 @@ def compareConfigs(config1, config2):
     for acl in config1.acls:
         acl2 = config2.containsAcl(acl)
         
-        if netObject != False:
+        if acl2 != False:
             #Both configs have this acl, compare them
             if acl != acl2:
                 aclsToSync.append(acl)
-        
         else:
             #The second config does not conaint this acl
             aclsToSync.append(acl)
-
-
-#Temp - Show Differences
-#print "~Diffs"
-
-#for netObject in netObjectsToSync:
-#print netObject
-
-#for objectGroup in objectGroupsToSync:
-#print objectGroup
-
-#for acl in aclsToSync:
-#print acl
+    
+    
+    #Temp - Show Differences
+    #print "~Diffs"
+    
+    for netObject in netObjectsToSync:
+        print netObject
+    
+    for objectGroup in objectGroupsToSync:
+        print objectGroup
+    
+    for acl in aclsToSync:
+        print acl
 
 def connectSSH (host):
+    configText = ""
     
     #ssh into host
-    child = pexpect.spawn ('ssh ' + user + '@' + device1)
+    child = pexpect.spawn ('ssh ' + user + '@' + host)
     child.expect ('.*assword:.*')
     child.sendline (password)
     
@@ -337,12 +342,12 @@ def connectSSH (host):
     #get running config
     child.sendline ('show run')
     child.expect ('.*: end.*')
-    config = child.after
+    configText = child.after
     
     child.sendline('exit')
     child.close() # close ssh
     
-    return config
+    return configText
 
 def parseAccessLists (config):
     acls       = []
@@ -438,27 +443,27 @@ def parseConfig (config):
     #Read Object networks
     while start < objStart: 
         try:
-            end   = config.index("object network", (start + 6))
-            acl   = config[start:end]
-            start = end
-            
-            newConfig.netObjects.append(parseNetObject(acl))
-        
+            end = config.index("object network", (start + 6))
         except ValueError:
-            start = objStart
+            end = objStart
+        
+        acl   = config[start:end]
+        start = end
+        
+        newConfig.netObjects.append(parseNetObject(acl))
     
     #Read Object-groups
+    start = objStart
     while start < aclStart: 
         try:
             end   = config.index("object-group", (start + 12))
-            acl   = config[start:end]
-            start = end
-            
-            newConfig.objectGroups.append(parseObjectGroup(acl))
-        
         except ValueError:
-            print "Error"
-            start = aclStart
+            print "~Error"
+        
+        acl   = config[start:end]
+        start = end
+        
+        newConfig.objectGroups.append(parseObjectGroup(acl))
     
     #Read Access Lists
     aclEnd  = config.index("!", aclStart)
