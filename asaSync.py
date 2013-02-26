@@ -10,12 +10,14 @@ device1  = ""
 device2  = ""
 
 class Acl:
-    aclName    = ""
-    aclType    = ""
-    action     = ""
-    extended   = ""
-    lineNumber = 0
-    remark     = ""
+    
+    def __init__(self):
+        aclName    = ""
+        aclType    = ""
+        action     = ""
+        extended   = ""
+        lineNumber = 0
+        remark     = ""
     
     def __eq__(self, other):
         try:
@@ -110,7 +112,9 @@ class Config:
         return result
 
 class Host:
-    ip = "0.0.0.0"
+    
+    def __init__(self):
+        ip = "0.0.0.0"
     
     def __eq__(self, other):
         if self.ip == other.ip:
@@ -125,8 +129,10 @@ class Host:
         return " host " + self.ip;
 
 class Subnet:
-    ip   = "0.0.0.0"
-    mask = "255.255.255.255"
+    
+    def __init__(self):
+        ip   = "0.0.0.0"
+        mask = "255.255.255.255"
     
     def __eq__(self, other):
         if self.ip == other.ip and self.mask == other.mask:
@@ -141,8 +147,10 @@ class Subnet:
         return " subnet " + self.ip + " " + self.mask;    
 
 class Range:
-    ipStart = "0.0.0.0"
-    ipEnd   = "0.0.0.0"
+    
+    def __init__(self):
+        ipStart = "0.0.0.0"
+        ipEnd   = "0.0.0.0"
     
     def __eq__(self, other):
         if self.ipStart == other.ipStart and self.ipEnd == other.ipEnd:
@@ -157,10 +165,12 @@ class Range:
         return " range " + self.ipStart + " " + self.ipEnd;    
 
 class NetworkObject:
-    name    = ""
-    hosts   = []
-    subnets = []
-    ranges  = []
+    
+    def __init__(self):
+        name    = ""
+        hosts   = []
+        subnets = []
+        ranges  = []
     
     def __eq__(self, other):
         try:
@@ -215,11 +225,13 @@ class NetworkObject:
         return result
 
 class NetworkObjectGroup:
-    name        = ""
-    groupType   = ""
-    serviceType = ""
-    typeList    = []
-    valueList   = []
+    
+    def __init__(self):
+        name        = ""
+        groupType   = ""
+        serviceType = ""
+        typeList    = []
+        valueList   = []
     
     def __eq__(self, other):
         try:
@@ -618,5 +630,4 @@ config1 = parseConfig(config1Text)
 config2 = parseConfig(config2Text)
 
 compareConfigs(config1, config2)
-
 
