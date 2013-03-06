@@ -19,6 +19,20 @@ class Acl:
         lineNumber = 0
         remark     = ""
     
+    
+    def usesNetworkObject(self, networkObject):
+        if networkObject.name in self.extended:
+            return True
+        else:
+            return False
+    
+    
+    def usesNetworkObjectGroup(self, networkObjectGroup):
+        if networkObjectGroup.name in self.extended:
+            return True
+        else:
+            return False
+    
     def __eq__(self, other):
         try:
             if self.aclName != other.aclName:
@@ -70,6 +84,28 @@ class Config:
         netObjects   = []
         objectGroups = []    
     
+    # Checks to see if any of the ACLs in this config use a given Network Object
+    def aclsUseNetworkObject(self, networkObject):
+        found = False
+        
+        for accessList in self.acls:
+            if accessList.usesNetworkObject(networkObject):
+                found = True
+                break
+        
+        return found
+    
+    # Checks to see if any of the ACLs in this config use a given Object Group
+    def aclsUseObjectGroup(self, objectGroup):
+        found = False
+        
+        for accessList in self.acls:
+            if accessList.usesNetworkObjectGroup(objectGroup):
+                found = True
+                break
+        
+        return found
+    
     # Checks to see if this config contains a NetworkObject with the same name as the passed object
     # If yes, then the matching object is returned, if no; False is returned. 
     def containsNetObject(self, networkObject): 
@@ -96,6 +132,17 @@ class Config:
                 return accessList
         
         return False    
+    
+    # Lints the config
+    # Currently it only checks to see if object groups are used in ACLs
+    def lint(self):
+        for netObject in self.netObjects:
+            if self.aclsUseNetworkObject(netObject) == False:
+                print netObject.name + " Not Used"
+        
+        for objGroup in self.objectGroups:
+            if self.aclsUseObjectGroup(objGroup) == False:
+                print objGroup.name + " Not Used"
     
     def __str__(self):
         result = ""
@@ -320,19 +367,19 @@ def compareConfigs(config1, config2):
         else:
             #The second config does not conaint this acl
             aclsToSync.append(acl)
-    
-    
-    #Temp - Show Differences
-    #print "~Diffs"
-    
-    for netObject in netObjectsToSync:
-        print netObject
-    
-    for objectGroup in objectGroupsToSync:
-        print objectGroup
-    
-    for acl in aclsToSync:
-        print acl
+
+
+#Temp - Show Differences
+#print "~Diffs"
+
+#    for netObject in netObjectsToSync:
+#        print netObject
+
+#    for objectGroup in objectGroupsToSync:
+#        print objectGroup
+
+#    for acl in aclsToSync:
+#        print acl
 
 def connectSSH (host):
     configText = ""
@@ -631,3 +678,4 @@ config2 = parseConfig(config2Text)
 
 compareConfigs(config1, config2)
 
+config1.lint()
